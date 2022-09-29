@@ -1,0 +1,58 @@
+version: "3.9"
+services:
+  # web:
+  #   # build nie zostanie zrobiony dopóki db nie wstanie:
+  #   depends_on:
+  #     - postgres_db
+  #   build:
+  #     # w jakim folderze jest apka którą budujemy w stosunku do docker-compose.yml oraz gdzie jest Dockerfile
+  #     context: ./web
+  #     dockerfile: Dockerfile
+  #   # nazwa imagu który budujemy
+  #   image: django-k8s:v1
+  #   # na jakim porcie ma działać:
+  #   environment:
+  #     - PORT=8020
+  #   # wskazujemy lokalizacje .env w odpowiedzi na błąd wcgi ze nie ma zmiennych
+  #   env_file:
+  #     - web/.env
+  #   # mapowanie portów 8001 na zewnątrz, 8020 wewnątrz kontenera ( z defaultu kontener nie ma dostępu na świat)
+  #   ports:
+  #     - "8001:8020"
+  #   # robimy plik migrate.sh executable is odpalamy (wcześniej nie mogliśĶy bo trzeba było go skopiować+nie było bazy)
+  #   command: sh -c "chmod +x /app/migrate.sh && sh /app/migrate.sh && /app/entrypoint.sh"
+    
+  # nazwa postgres_db musi odpowiadać tej z .env POSGRES_DB
+  postgres_db:
+    image: postgres
+    # 
+    restart: always
+    # ręczjie ustawiamy port:
+    command: -p 5434
+    # zmienne z .env
+    env_file:
+      - web/.env
+    # defsault port is 5432
+    expose:
+      - 5434
+    ports:
+      - "5434:5434"
+    # potrzebne by db był persistent (i potrzebuje do tego volumes)
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+
+  # tak dla porównania redis databse:
+  redis_db:
+    image: redis
+    restart: always
+    expose:
+      - 6388
+    ports:
+      - "6388:6388"
+    volumes:
+        - redis_data:/data
+    entrypoint: redis-server --appendonly yes --port 6388
+
+volumes:
+  postgres_data:
+  redis_data:
